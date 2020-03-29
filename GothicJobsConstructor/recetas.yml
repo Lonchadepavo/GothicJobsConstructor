@@ -1,0 +1,15 @@
+recetas:
+   cemento:
+      resultado: cemento, 2
+      ingredientes:
+         - arena, 1
+         - grava, 1
+         - arcilla, 1
+      herramienta: pala
+      calor: no
+      tiempo: 10
+
+ingredientes:
+   sand:
+   gravel:
+   clay_ball:

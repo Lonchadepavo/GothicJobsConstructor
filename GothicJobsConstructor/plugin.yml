@@ -1,0 +1,7 @@
+name: GothicJobsConstructor
+main: com.loncha.gothicjobsconstructor.Main
+version: 0.1
+commands:
+   reloadconstructor:
+      description: Recarga todos los archivos de configuracion del constructor.
+      usage: /reloadconstructor

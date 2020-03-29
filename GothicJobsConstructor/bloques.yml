@@ -1,0 +1,9 @@
+bloques:
+   cobblestone:
+      idbloque: 4
+      data: 0
+      nivel: 1
+   cobblestone_stairs:
+      idbloque: 67
+      data: 0
+      nivel: 3

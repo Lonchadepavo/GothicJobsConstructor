@@ -1,0 +1,8 @@
+bloques:
+  bloque:
+    dataorigen: 0
+    herramienta: 'Martillo y cincel'
+    resultado: STAIRS
+    dataresultado : 0
+    residuo: WALL
+    nivel: 1
