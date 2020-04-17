@@ -241,6 +241,7 @@ public class Main extends JavaPlugin implements Listener {
 			configFile.load(config);
 			
 			for (String s : getCustomConfig().getConfigurationSection("bloques").getKeys(false)) {
+				System.out.println(s);
 				bloqueConstruir.add(getCustomConfig().getInt("bloques."+s+".idbloque"));
 				bloqueConstruirData.add(getCustomConfig().getInt("bloques."+s+".data"));
 				nivelBloqueConstruir.add(getCustomConfig().getInt("bloques."+s+".nivel"));
