@@ -3,8 +3,10 @@ package com.loncha.gothicjobsconstructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -13,6 +15,7 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.material.MaterialData;
 import org.bukkit.metadata.FixedMetadataValue;
 
 import net.md_5.bungee.api.ChatColor;
@@ -29,13 +32,18 @@ public class CrafteosMesa implements Listener{
 	@EventHandler
 	public void onBlockPlace(BlockPlaceEvent e) {
 		Block b = e.getBlock();
-		
 		for (int i = 0; i < m.bloqueOrigen.size(); i++) {
 			if (b.getType().toString().equalsIgnoreCase(m.bloqueOrigen.get(i))) {
-				if (m.bloqueOrigenData.get(i) == b.getData()) {
-					if (checkMesa(b) == "mesa de trabajo") {
+				if (checkMesa(b) == "mesa de trabajo") {
+					
+					if (b.getType().toString().contains("STAIRS")) {
+						b.setData((byte)(0));
+					}
+					
+					if (m.bloqueOrigenData.get(i) == b.getData()) {				
 						b.setMetadata("left", new FixedMetadataValue(m, "true"));
-						b.setMetadata("constructor", new FixedMetadataValue(m, "true"));
+						b.setMetadata("tipo", new FixedMetadataValue(m,"constructor"));
+						b.setMetadata("constructor", new FixedMetadataValue(m, "true"));	
 						b.setMetadata("resultado", new FixedMetadataValue(m, m.bloqueResultado.get(i)));
 						b.setMetadata(m.bloqueResultado.get(i), new FixedMetadataValue(m,"true"));
 						b.setMetadata("resultadodata", new FixedMetadataValue(m, m.bloqueResultadoData.get(i)));
@@ -64,54 +72,101 @@ public class CrafteosMesa implements Listener{
 		if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
 			Block b = e.getClickedBlock();
 
-			if (b.hasMetadata("constructor")) {
-				if (b.getMetadata("herramientaconstructor").get(0).asString().equalsIgnoreCase(nombreItemInHand)) {
-					if (p.hasPermission("gjobs.constructor"+b.getMetadata("nivel").get(0).asInt())) {
-						b.removeMetadata("cazador", m);
-						b.removeMetadata(b.getMetadata("resultado").get(0).asString(), m);
-						b.setType(Material.getMaterial(b.getMetadata("resultado").get(0).asString()));
-						b.setData((byte) (b.getMetadata("resultadodata").get(0).asInt()));
-		
-						ItemStack residuo = new ItemStack(Material.getMaterial(b.getMetadata("residuo").get(0).asString()));
-						p.getWorld().dropItem(p.getLocation(), residuo);
-						
-						for (int i = 0; i < m.bloqueOrigen.size(); i++) {
-							if (b.getType().toString().equalsIgnoreCase(m.bloqueOrigen.get(i))) {
-								if (m.bloqueOrigenData.get(i) == b.getData()) {
-									b.setMetadata("resultado", new FixedMetadataValue(m, m.bloqueResultado.get(i)));
-									b.setMetadata(m.bloqueResultado.get(i), new FixedMetadataValue(m,"true"));
-									b.setMetadata("resultadodata", new FixedMetadataValue(m, m.bloqueResultadoData.get(i)));
-									b.setMetadata("herramientaconstructor", new FixedMetadataValue(m, m.herramientas.get(i)));
-									b.setMetadata("residuo", new FixedMetadataValue(m, m.itemResiduo.get(i)));
-									b.setMetadata("nivel", new FixedMetadataValue(m, m.nivelCrafteo.get(i)));
+			if (b.hasMetadata("tipo")) {
+				if (b.getMetadata("tipo").get(0).asString().equals("constructor")) {
+					if (b.getMetadata("herramientaconstructor").get(0).asString().equalsIgnoreCase(nombreItemInHand)) {
+						if (p.hasPermission("gjobs.constructor"+b.getMetadata("nivel").get(0).asInt())) {
+							b.setMetadata("tipo", new FixedMetadataValue(m,"constructor"));
+							
+							b.removeMetadata(b.getMetadata("resultado").get(0).asString(), m);
+							b.setType(Material.getMaterial(b.getMetadata("resultado").get(0).asString()));
+							b.setData((byte) (b.getMetadata("resultadodata").get(0).asInt()));
+
+							if (!b.getMetadata("residuo").get(0).asString().equals("AIR")) {
+								for (ItemStack item : m.itemsCustomConstructor) {
+									String nombreItem = "";
+									
+									if (item.hasItemMeta()) {
+										nombreItem = item.getItemMeta().getDisplayName();
+									} else {
+										nombreItem = item.getType().toString();
+									}
+									
+									if (b.getMetadata("residuo").get(0).asString().equals(nombreItem)) {
+										ItemStack residuo = item;
+										p.getWorld().dropItem(b.getLocation(), residuo);
+									}
+								}
+								
+							}
+	
+							for (int i = 0; i < m.bloqueOrigen.size(); i++) {
+								if (b.getType().toString().equalsIgnoreCase(m.bloqueOrigen.get(i))) {
+									if (m.bloqueOrigenData.get(i) == b.getData()) {
+										b.setMetadata("resultado", new FixedMetadataValue(m, m.bloqueResultado.get(i)));
+										b.setMetadata(m.bloqueResultado.get(i), new FixedMetadataValue(m,"true"));
+										b.setMetadata("resultadodata", new FixedMetadataValue(m, m.bloqueResultadoData.get(i)));
+										b.setMetadata("herramientaconstructor", new FixedMetadataValue(m, m.herramientas.get(i)));
+										b.setMetadata("residuo", new FixedMetadataValue(m, m.itemResiduo.get(i)));
+										b.setMetadata("nivel", new FixedMetadataValue(m, m.nivelCrafteo.get(i)));
+										
+										reproducirSonido(p, Sound.ENTITY_SHULKER_BULLET_HIT, 10);
+									
+									}
 								}
 							}
+						} else {
+							p.sendMessage(ChatColor.RED+"No sabes lo que haces y rompes el bloque");
+							
+							b.removeMetadata("left", m);
+							b.removeMetadata("constructor", m);
+							b.removeMetadata("tipo", m);
+							b.removeMetadata(b.getMetadata("resultado").get(0).asString(), m);
+							b.setType(Material.AIR);
+							
+							reproducirSonido(p,Sound.BLOCK_STONE_BREAK, 10);
 						}
-					} else {
-						p.sendMessage(ChatColor.RED+"No sabes lo que haces y rompes el bloque");
-						
-						b.removeMetadata("left", m);
-						b.removeMetadata("constructor", m);
-						b.removeMetadata(b.getMetadata("resultado").get(0).asString(), m);
-						b.setType(Material.AIR);
 					}
 				}
 			}
 		} else if (e.getAction() == Action.RIGHT_CLICK_BLOCK) {
 			Block b = e.getClickedBlock();
 			
-			if (b.hasMetadata("constructor")) {
-				if (!b.hasMetadata("cazador")) {
-					ItemStack bloque = new ItemStack(Material.getMaterial(b.getType().toString()));
+			if (b.hasMetadata("tipo")) {
+				if (b.getMetadata("tipo").get(0).asString().equals("constructor")) {
+					ItemStack bloque = new ItemStack(Material.getMaterial(b.getType().toString()),1,b.getData());
+					
 					p.getWorld().dropItem(b.getLocation(), bloque);
 					
 					b.removeMetadata("left", m);
 					b.removeMetadata("constructor", m);
+					b.removeMetadata("tipo", m);
 					b.removeMetadata(b.getMetadata("resultado").get(0).asString(), m);
 					b.setType(Material.AIR);
 				}
 			}
 		}
+	}
+	
+	public void reproducirSonido(Player p, Sound sonido, int rango) {
+        for (Player players : Bukkit.getOnlinePlayers()) {
+        	if (p.getWorld() == players.getWorld()) {
+				if (p.getLocation().distanceSquared(players.getLocation()) <= 10) {
+					
+					players.getWorld().playSound(p.getLocation(), sonido, 1.0F, 0.01F);
+				}
+        	}
+        }
+	}
+	
+	public void enviarMensajeSimple(Player p, ChatColor color, String mensaje, int rango) {
+        for (Player players : Bukkit.getOnlinePlayers()) {
+        	if (p.getWorld() == players.getWorld()) {
+				if (p.getLocation().distanceSquared(players.getLocation()) <= 10) {
+					players.sendMessage(color+mensaje);
+				}
+        	}
+        }
 	}
 
 	public String checkMesa(Block b) {	

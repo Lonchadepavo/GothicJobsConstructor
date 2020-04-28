@@ -20,8 +20,6 @@ public class Reload implements CommandExecutor {
 		if (p.isOp()) {
 			if (arg1.getName().equalsIgnoreCase("reloadconstructor")) {
 				m.rellenarListaCrafteosMesa();
-				m.rellenarListaRecetas();
-				m.rellenarListaIngredientes();
 				m.cargarItemsCustom();
 				m.cargarBloquesConstruccion();
 				p.sendMessage(ChatColor.GREEN+"GothicJobsConstructor recargado");
