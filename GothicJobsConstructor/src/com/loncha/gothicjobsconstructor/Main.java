@@ -35,6 +35,8 @@ public class Main extends JavaPlugin implements Listener {
 	ArrayList<Integer> bloqueConstruir = new ArrayList<Integer>();
 	ArrayList<Integer> bloqueConstruirData = new ArrayList<Integer>();
 	ArrayList<Integer> nivelBloqueConstruir = new ArrayList<Integer>();
+	ArrayList<String> materialParaBloque = new ArrayList<String>();
+	ArrayList<String> herramientaParaBloque = new ArrayList<String>();
 	
 	
 	FileConfiguration configFile;
@@ -150,6 +152,8 @@ public class Main extends JavaPlugin implements Listener {
 			bloqueConstruir = new ArrayList<Integer>();
 			bloqueConstruirData = new ArrayList<Integer>();
 			nivelBloqueConstruir = new ArrayList<Integer>();
+			materialParaBloque = new ArrayList<String>();
+			herramientaParaBloque = new ArrayList<String>();
 			
 			configFile.load(config);
 			
@@ -157,6 +161,8 @@ public class Main extends JavaPlugin implements Listener {
 				bloqueConstruir.add(getCustomConfig().getInt("bloques."+s+".idbloque"));
 				bloqueConstruirData.add(getCustomConfig().getInt("bloques."+s+".data"));
 				nivelBloqueConstruir.add(getCustomConfig().getInt("bloques."+s+".nivel"));
+				materialParaBloque.add(getCustomConfig().getString("bloques."+s+".material"));
+				herramientaParaBloque.add(getCustomConfig().getString("bloques."+s+".herramienta"));
 			}
 		} catch (Exception e) {
 			e.printStackTrace();

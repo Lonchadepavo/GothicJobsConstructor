@@ -3,13 +3,21 @@ package com.loncha.gothicjobsconstructor;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -32,13 +40,43 @@ public class Construccion implements Listener{
 		for (int i = 0; i < m.bloqueConstruir.size(); i++) {
 			if (b.getTypeId() == m.bloqueConstruir.get(i)) {
 				if (!b.getType().toString().contains("STAIRS")) {
-					System.out.println(bData);
-					System.out.println(m.bloqueConstruirData.get(i));
 					if (bData == m.bloqueConstruirData.get(i)) {
 						if (!p.hasPermission("gjobs.constructor"+m.nivelBloqueConstruir.get(i))) {
 							if (!checkMesa(b).equals("mesa de trabajo")) {
 								e.setCancelled(true);
 								p.sendMessage(ChatColor.DARK_RED+"No sabes como construir ese bloque.");
+							}
+						} else {
+							//AQUÍ VA EL CÓDIGO DE CONSTRUCCIÓN
+							if (!m.materialParaBloque.get(i).equals("AIR")) {
+								if (!checkMesa(b).equals("mesa de trabajo")) { 
+									b.setMetadata("material", new FixedMetadataValue(m, m.materialParaBloque.get(i)));
+									b.setMetadata("construido", new FixedMetadataValue(m, false));
+									
+									BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+						            scheduler.scheduleSyncDelayedTask(m, new Runnable() {
+						                @Override
+						                public void run() {
+						                	if (b.hasMetadata("construido")) {
+						                		if (!b.getMetadata("construido").get(0).asBoolean()) {
+						                			int number = (int)(Math.random() * 100) + 1;
+						                			
+						                			if (number <= 30) {
+						                				b.setType(Material.AIR);
+						                				reproducirSonido(p, Sound.BLOCK_STONE_BREAK, 10);
+						                				p.sendMessage(ChatColor.DARK_RED + "No has usado nada para sujetar el bloque y se ha roto.");
+						                			} else {
+						                				b.getWorld().dropItem(b.getLocation(), new ItemStack(b.getType(), 1, b.getData()));
+						                				b.setType(Material.AIR);
+						                				reproducirSonido(p, Sound.BLOCK_STONE_BREAK, 10);
+						                				p.sendMessage(ChatColor.DARK_RED + "No has usado nada para sujetar el bloque y se ha roto.");
+						                			}
+						                		}
+						                	}
+						                }
+	
+						            }, 100);
+								}
 							}
 						}
 					}
@@ -48,11 +86,118 @@ public class Construccion implements Listener{
 							e.setCancelled(true);
 							p.sendMessage(ChatColor.DARK_RED+"No sabes como construir ese bloque.");
 						}
+					} else {
+						//AQUÍ VA EL CÓDIGO DE CONSTRUCCIÓN
+						if (!m.materialParaBloque.get(i).equals("AIR")) {
+							if (!checkMesa(b).equals("mesa de trabajo")) {
+								b.setMetadata("material", new FixedMetadataValue(m, m.materialParaBloque.get(i)));
+								b.setMetadata("construido", new FixedMetadataValue(m, false));
+								
+								BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+					            scheduler.scheduleSyncDelayedTask(m, new Runnable() {
+					                @Override
+					                public void run() {
+					                	if (b.hasMetadata("construido")) {
+					                		if (!b.getMetadata("construido").get(0).asBoolean()) {
+					                			int number = (int)(Math.random() * 100) + 1;
+					                			
+					                			if (number <= 30) {
+					                				b.setType(Material.AIR);
+					                				reproducirSonido(p, Sound.BLOCK_STONE_BREAK, 10);
+					                				p.sendMessage(ChatColor.DARK_RED + "No has usado nada para sujetar el bloque y se ha roto.");
+					                			} else {
+					                				b.getWorld().dropItem(b.getLocation(), new ItemStack(b.getType(), 1, b.getData()));
+					                				b.setType(Material.AIR);
+					                				reproducirSonido(p, Sound.BLOCK_STONE_BREAK, 10);
+					                				p.sendMessage(ChatColor.DARK_RED + "No has usado nada para sujetar el bloque y se ha roto.");
+					                			}
+					                		}
+					                	}
+					                }
+	
+					            }, 100);
+							}
+						}
 					}
 				}
 			}
 		}
 		
+	}
+	
+	@EventHandler
+	public void onBlockBreak(BlockBreakEvent e) {
+		Block b = e.getBlock();
+		int bData = b.getData();
+		
+		Player p = e.getPlayer();
+		
+		if (b.hasMetadata("material")) {
+			b.removeMetadata("material", m);
+			b.removeMetadata("construido", m);
+		}
+	}
+	
+	@EventHandler
+	public void onPlayerInteract(PlayerInteractEvent e) {
+		Player p = e.getPlayer();
+		
+		ItemStack itemInHand = p.getInventory().getItemInMainHand();
+		String nombreItemInHand = "";
+		
+		if (itemInHand.hasItemMeta()) {
+			nombreItemInHand = itemInHand.getItemMeta().getDisplayName();
+		} else {
+			nombreItemInHand = itemInHand.getType().toString();
+		}
+		
+		if (e.getAction() == Action.LEFT_CLICK_BLOCK) {
+			Block b = e.getClickedBlock();
+			
+			if (b.hasMetadata("material")) {
+				if (b.getMetadata("material").get(0).asString().equals(nombreItemInHand)) {
+					restarObjeto(itemInHand, p);
+					b.removeMetadata("material", m);
+					int bData = b.getData();
+					for (int i = 0; i < m.bloqueConstruir.size(); i++) {
+						if (b.getTypeId() == m.bloqueConstruir.get(i)) {
+							if (!b.getType().toString().contains("STAIRS")) {
+								if (bData == m.bloqueConstruirData.get(i)) {
+									if (m.herramientaParaBloque.get(i).contentEquals("AIR")) {
+										b.removeMetadata("construido", m);
+									}
+								}
+							} else {
+								if (m.herramientaParaBloque.get(i).contentEquals("AIR")) {
+									b.removeMetadata("construido", m);
+								}
+							}
+						}
+					}
+				}
+			} else {
+				if (b.hasMetadata("construido")) {
+					if (!b.getMetadata("construido").get(0).asBoolean()) {
+						int bData = b.getData();
+						for (int i = 0; i < m.bloqueConstruir.size(); i++) {
+							if (b.getTypeId() == m.bloqueConstruir.get(i)) {
+								if (!b.getType().toString().contains("STAIRS")) {
+									if (bData == m.bloqueConstruirData.get(i)) {
+										if (nombreItemInHand.equals(m.herramientaParaBloque.get(i))) {
+											b.removeMetadata("construido", m);
+										}
+									}
+								} else {
+									if (nombreItemInHand.equals(m.herramientaParaBloque.get(i))) {
+										b.removeMetadata("construido", m);
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 	
 	public String checkMesa(Block b) {	
@@ -111,4 +256,23 @@ public class Construccion implements Listener{
 		return "nada";
 	}
 	
+	public void reproducirSonido(Player p, Sound sonido, int rango) {
+        for (Player players : Bukkit.getOnlinePlayers()) {
+        	if (p.getWorld() == players.getWorld()) {
+				if (p.getLocation().distanceSquared(players.getLocation()) <= 10) {
+					
+					players.getWorld().playSound(p.getLocation(), sonido, 1.0F, 0.01F);
+				}
+        	}
+        }
+	}
+	
+	public void restarObjeto(ItemStack item, Player p) {
+		if (item.getAmount()-1 == 0) {
+			p.getInventory().setItemInMainHand(new ItemStack(Material.AIR));
+		} else {
+			item.setAmount(item.getAmount()-1);
+			p.getInventory().setItemInMainHand(item);
+		}
+	}
 }
